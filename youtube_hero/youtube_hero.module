@@ -1,0 +1,387 @@
+<?php
+
+function youtube_hero_help($path, $arg){
+    switch($path){
+        case "admin/help#youtube_hero":
+            return '<p>' . t("Youtube Hero Module.") . '</p>';
+            break;
+    }
+}
+
+/**
+ * Implements hook_node_info()
+ */
+// ================ ADDS CONTENT TYPE - Slider Slides ================
+function youtube_hero_node_info() {
+    $items = array(
+        'youtube_hero' => array(
+            'name' => t('Youtube Hero'),
+            'base' => 'node_content',
+            'description' => '',
+            'has_title' => '1',
+            'title_label' => t('Title'),
+            'help' => '',
+            'node-submitted' => 0,
+            'node-preview' => 0,
+            'node-options' => array('status'),
+            ),
+        );
+    return $items;
+    
+}
+
+/**
+ * Implement hook_form()
+ */
+// ================ HOOK To ADD CONTENT FOR NEW TYPE - Slider Slides ================
+function youtube_hero_form($node, $form_state) {
+    return node_content_form($node, $form_state);
+}
+
+
+/**
+ * Implements hook_block_info().
+ */
+function youtube_hero_block_info(){
+    $blocks['display_youtube_hero'] = array(
+        'info' => t("Display Youtube Hero"),
+        'cache' => DRUPAL_CACHE_GLOBAL,
+    );
+    $blocks['demonstrate_youtube_hero_slide'] = array(
+        'info' => t("Demonstrate Youtube Hero"),
+        'cache' => DRUPAL_CACHE_GLOBAL,
+    );
+    return $blocks;
+}
+
+/**
+ *  Implements hook_block_view().
+ */
+
+function youtube_hero_block_view($block_name = ""){
+    switch ($block_name){
+        case 'display_youtube_hero':
+            $block['subject'] = t("Display Youtube Hero");
+            $block['content'] = displayYoutubeHero();
+            return $block;
+        case 'demonstrate_youtube_hero_slide':
+            $block['subject'] = t("Demonstrate Youtube Hero");
+            $block['content'] = demonstrateYoutubeHero();
+            return $block;
+    }
+
+}
+
+function displayYoutubeHero() {
+    
+    $query = new EntityFieldQuery();
+    $query  ->entityCondition('entity_type', 'node')
+            ->entityCondition('bundle', 'youtube_hero')
+            ->propertyCondition('status', NODE_PUBLISHED)
+            ->propertyOrderBy('title', 'ASC')
+            ->range(0, 1);
+            
+    $result = $query->execute();
+    if (!empty($result['node'])) {
+        $keys = array_keys($result['node']);
+        $nid = isset($keys[0]) ? $keys[0] : 0;
+    } else {
+        $nid = 0;    
+    }
+
+    if ($nid == 0) {
+        $output = array (
+            '#type' => "markup",
+            '#prefix' => "",
+            '#markup' => "",
+            '#suffix' => "",
+            );
+        return $output;
+    }
+
+    $heroArr = buildYoutubeHero($nid);
+    $html = "<style type='text/css' media='all'>" .cssYoutubeHero(). "</style>";
+    $html.= $heroArr["markup"];
+    $html.= "<script type='text/javascript'>" .jsYoutubeHero($heroArr["youtID"],$heroArr["ytStrt"],$heroArr["ytStop"]). "</script>";
+    $html.= "<script type='text/javascript' src='//www.youtube.com/player_api'></script>";
+
+    $output = array (
+        '#type' => "markup",
+        '#prefix' => "",
+        '#markup' => $html,
+        '#suffix' => "",
+        );
+    return $output;
+    
+}
+
+function demonstrateYoutubeHero() {
+    
+    $nid = 0;
+	if (arg(0) == 'node' && is_numeric(arg(1))) {
+		$nid = arg(1);
+    }
+    
+    if ($nid == 0) {
+        $output = array (
+            '#type' => "markup",
+            '#prefix' => "",
+            '#markup' => "",
+            '#suffix' => "",
+            );
+        return $output;
+    }
+
+    $heroArr = buildYoutubeHero($nid);
+    $html = "<style type='text/css' media='all'>" .cssYoutubeHero(). "</style>";
+    $html.= $heroArr["markup"];
+    $html.= "<script type='text/javascript'>" .jsYoutubeHero($heroArr["youtID"],$heroArr["ytStrt"],$heroArr["ytStop"]). "</script>";
+    $html.= "<script type='text/javascript' src='//www.youtube.com/player_api'></script>";
+   
+    $output = array (
+        '#type' => "markup",
+        '#prefix' => "",
+        '#markup' => $html,
+        '#suffix' => "",
+        );
+    return $output;
+    
+}
+
+function buildYoutubeHero($nid) {
+
+    $node = node_load($nid);
+    $title =    isset($node->field_youtube_hero_title[LANGUAGE_NONE][0]["value"]) ?         trim($node->field_youtube_hero_title[LANGUAGE_NONE][0]["value"]) : "";
+    $body =     isset($node->field_youtube_hero_body[LANGUAGE_NONE][0]["value"]) ?          trim($node->field_youtube_hero_body[LANGUAGE_NONE][0]["value"]) : "";
+    $action =   isset($node->field_youtube_hero_action_text[LANGUAGE_NONE][0]["value"]) ?   trim($node->field_youtube_hero_action_text[LANGUAGE_NONE][0]["value"]) : "";
+    $url =      isset($node->field_youtube_hero_action_url[LANGUAGE_NONE][0]["value"]) ?    trim($node->field_youtube_hero_action_url[LANGUAGE_NONE][0]["value"]) : "";
+    $youtID =   isset($node->field_youtube_hero_video_id[LANGUAGE_NONE][0]["value"]) ?      trim($node->field_youtube_hero_video_id[LANGUAGE_NONE][0]["value"]) : "";
+    $ytStrt =   isset($node->field_youtube_hero_start_second[LANGUAGE_NONE][0]["value"]) ?  floatval($node->field_youtube_hero_start_second[LANGUAGE_NONE][0]["value"]) : 0;
+    $ytStop =   isset($node->field_youtube_hero_stop_second[LANGUAGE_NONE][0]["value"]) ?   floatval($node->field_youtube_hero_stop_second[LANGUAGE_NONE][0]["value"]) : 0;
+    $fbURI =    isset($node->field_youtube_hero_fallback_img[LANGUAGE_NONE][0]["uri"]) ?    trim($node->field_youtube_hero_fallback_img[LANGUAGE_NONE][0]["uri"]) : "";
+    $fbURL =    file_create_url($fbURI);
+    
+    $markup = "<div id='youtube-hero'>";
+    $markup.= "     <div id='youtube-hero-overlay'>";
+    if ($title!="") {
+        $markup.= "         <h1 id='youtube-hero-overlay-title' class='flex-item'>${title}</h1>";
+    }
+    if ($body!="") {
+        $markup.= "         <div id='youtube-hero-overlay-text' class='flex-item'>${body}</div>";
+    }
+    if ($url!="") {
+        $target = (stripos($url,"http") === 0) ? " target='_blank'": "";
+        $markup.= "         <a href='${url}'${target}><div id='youtube-hero-overlay-action' class='flex-item'>${action}</div></a>";
+    }
+    $markup.= "     </div>";
+    $markup.= "     <div id='fallback'><img src='${fbURL}'></div>";
+    $markup.= "     <div id='player'></div>";
+    $markup.= "</div>";
+    
+    $heroArr = array();
+    $heroArr["markup"] = $markup;
+    $heroArr["youtID"] = $youtID;
+    $heroArr["ytStrt"] = $ytStrt;
+    $heroArr["ytStop"] = $ytStop;
+    
+    return $heroArr;
+    
+    
+}
+
+function jsYoutubeHero($youtID,$ytStrt,$ytStop) {
+    $imgPath = drupal_get_path('module', 'youtube_hero') . "/images";
+    
+    $strTime = $ytStrt;
+    $runTime = floor(($ytStop - $ytStrt)*1000);
+    
+$js=<<<JS
+    (function ($) { jQuery(document).ready(function($) {
+
+        var player;
+        var playerReady = false;
+        var playerLoop = false;
+        window.onYouTubePlayerAPIReady = function() {
+            player = new YT.Player('player', {
+                playerVars: {
+                    'autoplay':         0,
+                    'cc_load_policy':   0,
+                    'controls':         0,
+                    'disablekb':        1,
+                    'showinfo':         0
+                },
+                videoId: '${youtID}',
+                events: {
+                    'onReady': onPlayerReady,
+                }
+            });
+
+        }
+
+        function onPlayerReady(event) {
+            playerReady = true;
+            player.mute();
+            player.seekTo(${strTime});
+            player.playVideo();
+            setYoutubeHero();
+        }
+
+        var loopTimer;
+        function playbackLoop() {
+            playerLoop = true;
+            clearTimeout(loopTimer);
+            loopTimer = setTimeout( function(){ 
+                    player.seekTo(${strTime});
+                    playbackLoop();
+            }, ${runTime});
+        }
+        
+        function setYoutubeHero() {
+            var MAXHIGH = 500;
+            var MAXWIDE = $('#youtube-hero').width();
+            var RATIO = 16/9;
+            var vidHigh=0, vidWide=0, marTop=0, marLft=0;    
+
+            if (playerReady) {
+                if (!playerLoop) { playbackLoop(); }
+                $('#player').fadeIn("slow");
+                $('#youtube-hero-overlay').css({"background-image":"url('/${imgPath}/dark.png')"});
+            } else {
+                $('#fallback').css({"display":"block"});
+                $('#youtube-hero-overlay').css({"background-image":"url('/${imgPath}/dark.png')"});
+            }
+            
+            if ((MAXHIGH * RATIO) > MAXWIDE) {
+                // ================ VIDEO IS WIDER THAN WINDOW ================
+                vidHigh = MAXHIGH;
+                vidWide = vidHigh * RATIO;
+                marTop = 0;
+                marLft = -1 * (vidWide - MAXWIDE) / 2;
+                $('#player').css({"height":vidHigh+"px","width":vidWide+"px","margin-top":marTop+"px","margin-left":marLft+"px"});
+                $('#fallback').css({"height":vidHigh+"px","width":vidWide+"px","margin-top":marTop+"px","margin-left":marLft+"px"});
+            } else {
+                // ================ VIDEO IS TALLER THAN WINDOW ================
+                vidWide = MAXWIDE;
+                vidHigh = vidWide / RATIO;
+                marTop = -1 * (vidHigh - MAXHIGH) / 2;
+                marLft = 0;
+                $('#player').css({"height":vidHigh+"px","width":vidWide+"px","margin-top":marTop+"px","margin-left":marLft+"px"});
+                $('#fallback').css({"height":vidHigh+"px","width":vidWide+"px","margin-top":marTop+"px","margin-left":marLft+"px"});
+            }
+            
+        }
+        setYoutubeHero();
+        $(window).resize(function(){ setYoutubeHero(); });    
+    
+        
+    }); }(jQuery));
+JS;
+    return $js;
+}
+
+
+function cssYoutubeHero() {
+    $imgPath = drupal_get_path('module', 'youtube_hero') . "/images";
+    
+$css=<<<CSS
+#youtube-hero {
+    position: relative;
+    width: 100%;
+    height: 500px;
+    overflow:hidden;
+    background-color: #000;
+}
+
+#fallback {
+    display:none;
+    position: absolute;
+    z-index: 300;
+}
+#fallback img {
+    width:100%;
+    height:100%;
+}
+
+#player {
+    display:none;
+    position: absolute;
+    z-index: 400;
+}
+
+#youtube-hero-overlay {
+    box-sizing: border-box;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width:100%;
+    height: 100%;
+    z-index: 500;
+    background-image: url('/${imgPath}/dark.png');
+    background-repeat: repeat;
+    padding: 20px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    
+}
+
+.flex-item {
+    width: 100%;
+    text-align: center;
+}
+
+#youtube-hero-overlay a {
+    text-decoration: none;
+    color: #fff;
+    width: 100%;
+    max-width: 350px;
+}
+#youtube-hero-overlay-title {
+    margin:0;
+    padding:0px 20px;
+    font-size: 45px;
+    line-height: 55px;
+    box-sizing: border-box;
+}
+
+#youtube-hero-overlay-text {
+    margin:0;
+    padding:0px 20px;
+    font-size: 28px;
+    line-height: 50px;
+    box-sizing: border-box;
+}
+
+#youtube-hero-overlay-action:hover {
+    background-color: rgb(0, 34, 85);
+}
+
+#youtube-hero-overlay-action {
+    max-width: 350px;
+    width: 100%;
+    margin:10px 0px;
+    padding:4px 15px;
+    font-size: 26px;
+    font-weight: 400;
+    line-height: 36px;
+    background-color: rgb(51, 102, 153);
+    color: #fff;
+    cursor: pointer;
+    font-style: normal;
+    text-decoration: none;
+    text-transform: uppercase;
+    box-sizing: border-box;
+}
+
+/* ================================== YOUTUBE SLIDER UPDATES ================================== */  
+#youtube-hero-overlay-action {
+    padding: 4px 50px;
+    font-size: 20px;
+}
+
+
+CSS;
+    return $css;
+}

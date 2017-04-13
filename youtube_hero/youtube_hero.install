@@ -1,0 +1,44 @@
+<?php
+
+require_once('youtube_hero.field_base.inc');
+require_once('youtube_hero.field_instance.inc');
+
+/**
+ * Implements hook_install().
+ */
+function youtube_hero_install() {
+    node_types_rebuild();
+    
+    foreach (_youtube_hero_installed_fields() as $field) {
+        field_create_field($field);
+    }
+    foreach (_youtube_hero_installed_instances() as $fieldinstance) {
+        field_create_instance($fieldinstance);
+    }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function youtube_hero_uninstall() {
+    $type = 'youtube_hero';
+    $sql = 'SELECT nid FROM {node} n WHERE n.type = :type';
+    $result = db_query($sql, array(':type' => $type));
+    $nodeids = array();
+    foreach ($result as $row) {
+        $nodeids[] = $row->nid;
+    }
+    node_delete_multiple($nodeids);
+    
+    foreach (array_keys(_youtube_hero_installed_fields()) as $field) {
+        field_delete_field($field);
+    }
+    $instances = field_info_instances('node', 'youtube_hero');
+    foreach ($instances as $instance_name => $fieldinstance) {
+        field_delete_instance($fieldinstance);
+    }
+    
+    node_type_delete($type);
+    field_purge_batch(500);
+}
+
