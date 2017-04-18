@@ -245,6 +245,7 @@ $js=<<<JS
             if (playerReady) {
                 if (!playerLoop) { playbackLoop(); }
                 $('#player').fadeIn("slow");
+                $('#player').attr('tabindex', -1);
                 $('#youtube-hero-overlay').css({"background-image":"url('/${imgPath}/dark.png')"});
             } else {
                 $('#fallback').css({"display":"block"});
