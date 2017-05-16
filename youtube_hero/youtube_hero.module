@@ -43,14 +43,17 @@ function youtube_hero_form($node, $form_state) {
  * Implements hook_block_info().
  */
 function youtube_hero_block_info(){
-    $blocks['display_youtube_hero'] = array(
-        'info' => t("Display Youtube Hero"),
-        'cache' => DRUPAL_CACHE_GLOBAL,
-    );
-    $blocks['demonstrate_youtube_hero_slide'] = array(
-        'info' => t("Demonstrate Youtube Hero"),
-        'cache' => DRUPAL_CACHE_GLOBAL,
-    );
+    $blocks = array();
+    
+    $result = db_query("SELECT * FROM node WHERE (type = 'youtube_hero') AND (status = 1)");
+    foreach($result as $row) {
+        $title = trim($row->title);
+        $nid = intval($row->nid);
+        $blocks["displayYTHero_${nid}"] = array(
+            'info' => t("Youtube Hero - ${title}"),
+            'cache' => DRUPAL_CACHE_PER_PAGE,
+        );
+    }
     return $blocks;
 }
 
@@ -59,45 +62,22 @@ function youtube_hero_block_info(){
  */
 
 function youtube_hero_block_view($block_name = ""){
-    switch ($block_name){
-        case 'display_youtube_hero':
-            $block['subject'] = t("Display Youtube Hero");
-            $block['content'] = displayYoutubeHero();
+    $block = array();
+    
+    $result = db_query("SELECT * FROM node WHERE (type = 'youtube_hero') AND (status = 1)");
+    foreach($result as $row) {
+        $title = trim($row->title);
+        $nid = intval($row->nid);
+        $name = "displayYTHero_${nid}";
+        if ($block_name == $name) {
+            $block['subject'] = t("Youtube Hero - ${title}");
+            $block['content'] = displayYoutubeHero($nid);
             return $block;
-        case 'demonstrate_youtube_hero_slide':
-            $block['subject'] = t("Demonstrate Youtube Hero");
-            $block['content'] = demonstrateYoutubeHero();
-            return $block;
+        }
     }
-
 }
 
-function displayYoutubeHero() {
-    
-    $query = new EntityFieldQuery();
-    $query  ->entityCondition('entity_type', 'node')
-            ->entityCondition('bundle', 'youtube_hero')
-            ->propertyCondition('status', NODE_PUBLISHED)
-            ->propertyOrderBy('title', 'ASC')
-            ->range(0, 1);
-            
-    $result = $query->execute();
-    if (!empty($result['node'])) {
-        $keys = array_keys($result['node']);
-        $nid = isset($keys[0]) ? $keys[0] : 0;
-    } else {
-        $nid = 0;    
-    }
-
-    if ($nid == 0) {
-        $output = array (
-            '#type' => "markup",
-            '#prefix' => "",
-            '#markup' => "",
-            '#suffix' => "",
-            );
-        return $output;
-    }
+function displayYoutubeHero($nid) {
 
     $heroArr = buildYoutubeHero($nid);
     $html = "<style type='text/css' media='all'>" .cssYoutubeHero(). "</style>";
@@ -105,39 +85,6 @@ function displayYoutubeHero() {
     $html.= "<script type='text/javascript'>" .jsYoutubeHero($heroArr["youtID"],$heroArr["ytStrt"],$heroArr["ytStop"]). "</script>";
     $html.= "<script type='text/javascript' src='//www.youtube.com/player_api'></script>";
 
-    $output = array (
-        '#type' => "markup",
-        '#prefix' => "",
-        '#markup' => $html,
-        '#suffix' => "",
-        );
-    return $output;
-    
-}
-
-function demonstrateYoutubeHero() {
-    
-    $nid = 0;
-	if (arg(0) == 'node' && is_numeric(arg(1))) {
-		$nid = arg(1);
-    }
-    
-    if ($nid == 0) {
-        $output = array (
-            '#type' => "markup",
-            '#prefix' => "",
-            '#markup' => "",
-            '#suffix' => "",
-            );
-        return $output;
-    }
-
-    $heroArr = buildYoutubeHero($nid);
-    $html = "<style type='text/css' media='all'>" .cssYoutubeHero(). "</style>";
-    $html.= $heroArr["markup"];
-    $html.= "<script type='text/javascript'>" .jsYoutubeHero($heroArr["youtID"],$heroArr["ytStrt"],$heroArr["ytStop"]). "</script>";
-    $html.= "<script type='text/javascript' src='//www.youtube.com/player_api'></script>";
-   
     $output = array (
         '#type' => "markup",
         '#prefix' => "",
