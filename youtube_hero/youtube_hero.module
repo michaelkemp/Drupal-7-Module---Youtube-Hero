@@ -45,7 +45,7 @@ function youtube_hero_form($node, $form_state) {
 function youtube_hero_block_info(){
     $blocks = array();
     
-    $result = db_query("SELECT * FROM node WHERE (type = 'youtube_hero') AND (status = 1)");
+    $result = db_query("SELECT * FROM {node} WHERE (type = 'youtube_hero') AND (status = 1)");
     foreach($result as $row) {
         $title = trim($row->title);
         $nid = intval($row->nid);

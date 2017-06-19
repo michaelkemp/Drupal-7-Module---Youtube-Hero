@@ -2,11 +2,14 @@ name = Youtube Hero
 description = Block Module to display Youtube Video Hero Image
 package = Youtube Hero
 core = 7.x
-version = 1.25
+version = 1.28
 
 dependencies[] = image
 dependencies[] = number
 dependencies[] = text
+dependencies[] = entityreference
+dependencies[] = ctools
+dependencies[] = entity
 
 files[] = youtube_hero.install
 files[] = youtube_hero.module
