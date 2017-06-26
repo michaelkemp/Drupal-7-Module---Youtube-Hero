@@ -137,8 +137,9 @@ function buildYoutubeHero($nid) {
 }
 
 function jsYoutubeHero($youtID,$ytStrt,$ytStop) {
-    $imgPath = url(drupal_get_path('module', 'youtube_hero') . "/images", array('alias'=>false,'absolute'=>false));
-    
+    global $base_url;
+    $imgPath = $base_url . "/". drupal_get_path('module', 'youtube_hero') . "/images";
+
     $strTime = $ytStrt;
     $runTime = floor(($ytStop - $ytStrt)*1000);
     
@@ -229,8 +230,8 @@ JS;
 
 
 function cssYoutubeHero() {
-  
-    $imgPath = url(drupal_get_path('module', 'youtube_hero') . "/images", array('alias'=>false,'absolute'=>false));
+    global $base_url;
+    $imgPath = $base_url . "/". drupal_get_path('module', 'youtube_hero') . "/images";
 
 $css=<<<CSS
 #youtube-hero {
