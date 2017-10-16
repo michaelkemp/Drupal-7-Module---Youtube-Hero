@@ -142,6 +142,13 @@ function jsYoutubeHero($youtID,$ytStrt,$ytStop) {
 
     $strTime = $ytStrt;
     $runTime = floor(($ytStop - $ytStrt)*1000);
+	
+	// ============= DONT RUN VIDEO ON iOS DEVICES =============
+	if ( (stripos($_SERVER['HTTP_USER_AGENT'],"iPod") === false) && (stripos($_SERVER['HTTP_USER_AGENT'],"iPhone") === false) && (stripos($_SERVER['HTTP_USER_AGENT'],"iPad") === false) ) {
+		$isIOS = "false";
+	} else {
+		$isIOS = "true";
+	}
     
 $js=<<<JS
     (function ($) { jQuery(document).ready(function($) {
@@ -149,6 +156,8 @@ $js=<<<JS
         var player;
         var playerReady = false;
         var playerLoop = false;
+		var isIOS = ${isIOS};
+		
         window.onYouTubePlayerAPIReady = function() {
             player = new YT.Player('player', {
                 playerVars: {
@@ -190,7 +199,7 @@ $js=<<<JS
             var RATIO = 16/9;
             var vidHigh=0, vidWide=0, marTop=0, marLft=0;    
 
-            if (playerReady) {
+            if ((playerReady) && (!isIOS)) {
                 if (!playerLoop) { playbackLoop(); }
                 $('#player').fadeIn("slow");
                 $('#player').attr('tabindex', -1);
