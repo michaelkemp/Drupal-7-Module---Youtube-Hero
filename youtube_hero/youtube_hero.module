@@ -201,7 +201,7 @@ $js=<<<JS
 
             if ((playerReady) && (!isIOS)) {
                 if (!playerLoop) { playbackLoop(); }
-                $('#player').fadeIn("slow");
+                $('#player').css({"display":"block"});
                 $('#player').attr('tabindex', -1);
                 $('#youtube-hero-overlay').css({"background-image":"url('${imgPath}/dark.png')"});
             } else {
@@ -229,9 +229,8 @@ $js=<<<JS
             
         }
         setYoutubeHero();
-        $(window).resize(function(){ setYoutubeHero(); });    
-    
-        
+        $(window).resize(function(){ setYoutubeHero(); });
+
     }); }(jQuery));
 JS;
     return $js;
@@ -249,6 +248,7 @@ $css=<<<CSS
     height: 500px;
     overflow:hidden;
     background-color: #000;
+    z-index: 100;
 }
 
 #fallback {

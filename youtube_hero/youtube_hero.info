@@ -2,7 +2,7 @@ name = Youtube Hero
 description = Block Module to display Youtube Video Hero Image
 package = Youtube Hero
 core = 7.x
-version = 1.38
+version = 1.39
 
 dependencies[] = image
 dependencies[] = number
